@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="shoppingList.Views.CategoryView"
+             xmlns:Models="clr-namespace:shoppingList.Models"
+             xmlns:Views="clr-namespace:shoppingList.Views"
+             x:DataType="Models:CategoryModel">
+    <VerticalStackLayout MaximumWidthRequest="300" BackgroundColor="#232323">
+
+        <FlexLayout  Direction="Row" JustifyContent="SpaceBetween" Padding="10">
+            <Label FontSize="20"  Text="{Binding Name}" ></Label>
+            <Button Text="+" Command="{Binding OpenNewItem}"></Button>
+        </FlexLayout>
+        <CollectionView x:Name="itemsCollection"
+                ItemsSource="{Binding Items}"
+                Margin="20"
+                SelectionMode="Single">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical"
+                           ItemSpacing="10" ></LinearItemsLayout>
+            </CollectionView.ItemsLayout>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Views:Item></Views:Item>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </VerticalStackLayout>
+
+</ContentView>

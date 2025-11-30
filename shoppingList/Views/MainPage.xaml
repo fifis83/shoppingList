@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="shoppingList.MainPage"
+             xmlns:Views="clr-namespace:shoppingList.Views"
+             xmlns:Models="clr-namespace:shoppingList.Models"
+             x:DataType="Models:MainPageModel">
+    <ContentPage.BindingContext>
+        <Models:MainPageModel/>
+    </ContentPage.BindingContext>
+    
+    <VerticalStackLayout>
+        <HorizontalStackLayout>
+            <Picker x:Name="catName" SelectedIndex="{Binding CatIndex}" ItemsSource="{Binding CategoryPickerList}"></Picker>
+            <Button Text="+" Command="{Binding NewCategory}" HorizontalOptions="End"></Button>
+        </HorizontalStackLayout>
+        <CollectionView x:Name="catsCollection"
+        ItemsSource="{Binding Categories}"
+        Margin="20">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical"
+                   ItemSpacing="10" ></LinearItemsLayout>
+            </CollectionView.ItemsLayout>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Views:CategoryView></Views:CategoryView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </VerticalStackLayout>
+
+</ContentPage>

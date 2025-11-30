@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="shoppingList.Views.NewItemPage"
+             Title="NewItemPage">
+    <VerticalStackLayout Margin="5">
+                <Label Text="Nazwa produktu:"></Label>
+                <Editor x:Name="nameInput"></Editor>
+        <Grid ColumnDefinitions="2*,*,*">
+
+            <VerticalStackLayout Grid.Column="0" >
+                <Label Text="Ilość:"></Label>
+                <Editor x:Name="amountInput"></Editor>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Grid.Column="1" >
+                <Label Text="Jednostka:"></Label>
+                <Picker x:Name="unitInput" SelectedIndex="0" >
+                    <Picker.ItemsSource>
+                        <x:Array Type="{x:Type x:String}">
+                            <x:String>Szt.</x:String>
+                            <x:String>L</x:String>
+                            <x:String>g</x:String>
+                            <x:String>Kg</x:String>
+                            <x:String>m</x:String>
+                            <x:String>cm</x:String>
+                            <x:String>m^2</x:String>
+                            <x:String>inne</x:String>
+                        </x:Array>
+                    </Picker.ItemsSource>
+                </Picker>
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="2">
+                <Label Text="Opcjonalny:"></Label>
+                <CheckBox x:Name="optInput" HorizontalOptions="End"></CheckBox>
+            </VerticalStackLayout>
+        </Grid>
+        <Button Text="Dodaj" Clicked="Button_Clicked" Margin="0,5,0,0" VerticalOptions="End"></Button>
+    </VerticalStackLayout>
+</ContentPage>
