@@ -4,20 +4,25 @@
              x:Class="shoppingList.Views.CategoryView"
              xmlns:Models="clr-namespace:shoppingList.Models"
              xmlns:Views="clr-namespace:shoppingList.Views"
-             x:DataType="Models:CategoryModel">
-    <VerticalStackLayout MaximumWidthRequest="300" BackgroundColor="#232323">
+             x:DataType="Models:CategoryModel"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit">
+    <VerticalStackLayout MinimumWidthRequest="200" BackgroundColor="#232323" >
+        <FlexLayout Direction="Row" JustifyContent="SpaceBetween" Padding="10">
+            <FlexLayout.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding ToggleItemsVisibility}" NumberOfTapsRequired="1" />
+            </FlexLayout.GestureRecognizers>
 
-        <FlexLayout  Direction="Row" JustifyContent="SpaceBetween" Padding="10">
+            <Button Text="🚫" Command="{Binding DeleteCategory}" Background="Transparent"></Button>
             <Label FontSize="20"  Text="{Binding Name}" ></Label>
             <Button Text="+" Command="{Binding OpenNewItem}"></Button>
         </FlexLayout>
         <CollectionView x:Name="itemsCollection"
                 ItemsSource="{Binding Items}"
-                Margin="20"
-                SelectionMode="Single">
+                Margin="10"
+                IsVisible="{Binding ItemsVisible}"
+                ItemSizingStrategy="MeasureAllItems">
             <CollectionView.ItemsLayout>
-                <LinearItemsLayout Orientation="Vertical"
-                           ItemSpacing="10" ></LinearItemsLayout>
+                <LinearItemsLayout Orientation="Vertical"></LinearItemsLayout>
             </CollectionView.ItemsLayout>
 
             <CollectionView.ItemTemplate>

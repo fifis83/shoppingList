@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="shoppingList.ShopPageView"
+             xmlns:Views="clr-namespace:shoppingList.Views"
+             xmlns:Models="clr-namespace:shoppingList.Models"
+             x:DataType="Models:ShopPageModel">
+    <ScrollView >
+        <VerticalStackLayout>
+            <CollectionView x:Name="catsCollection"
+    ItemsSource="{Binding unboughtItems}"
+    Margin="20">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical"
+               ItemSpacing="5" ></LinearItemsLayout>
+                </CollectionView.ItemsLayout>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Views:Item></Views:Item>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

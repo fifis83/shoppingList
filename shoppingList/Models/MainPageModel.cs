@@ -1,149 +1,215 @@
 ﻿using System.Collections.ObjectModel;
+using shoppingList.Views;
 using System.Windows.Input;
 using System.Xml.Linq;
-using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Mvvm.Input;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Diagnostics;
+
 
 namespace shoppingList.Models
 {
-    internal partial class MainPageModel : ContentPage
+    public partial class MainPageModel : ContentPage
     {
-        // Make this an instance property and use PascalCase to match binding conventions
+
+        //TODO: zrób aplikacje, tym razem bez czatu
+        public ObservableCollection<string> storeList { get; set; } = new ObservableCollection<string>() { "Biedronka", "Lidl", "Dodaj..." };
         public ObservableCollection<CategoryModel> Categories { get; set; } = new ObservableCollection<CategoryModel>();
-        //string path = Path.Combine(FileSystem.AppDataDirectory, "List.xml");
-        string path = "C:\\Users\\filip\\Desktop\\galus";
-
+        string path = Path.Combine(FileSystem.AppDataDirectory, "List.xml");
         public int CatIndex { get; set; } = -1;
-        public IList<string> CategoryPickerList => new List<string>() { "AGD", "Jedzenie","Costam","Inne"};
-
+        public IList<string> CategoryPickerList => new List<string>() { "AGD", "Jedzenie", "Costam", "Inne" };
         public ICommand NewCategory { get; set; }
+        public ICommand ShowShoppingList { get; set; }
+        public ICommand ShowStoreList { get; set; }
+        public ICommand ExportList { get; set; }
+        public ICommand ImportList { get; set; }
         public MainPageModel()
         {
             Categories = Load();
             NewCategory = new AsyncRelayCommand(NewCategoryAsync);
+            ShowShoppingList = new AsyncRelayCommand(ShowShoppingListAsync);
+            ShowStoreList = new AsyncRelayCommand(ShowStoreListAsync);
+            ExportList = new AsyncRelayCommand(ExportListAsync);
+            ImportList = new AsyncRelayCommand(ImportListAsync);
         }
 
         async Task NewCategoryAsync()
         {
-            // If nothing selected, show alert on the app's active main page and return.
             if (CatIndex == -1) return;
             string catName = CategoryPickerList[CatIndex];
             string result;
             if (CatIndex == 3)
             {
-                result = await Application.Current?.MainPage.DisplayPromptAsync("Nowa kategoria", "Nazwa kategorii:");
+                result = await Shell.Current.CurrentPage.DisplayPromptAsync("Nowa kategoria", "Nazwa kategorii:");
                 if (!string.IsNullOrWhiteSpace(result)) catName = result;
                 else return;
             }
 
-            // Add own category
-            Categories.Add(new CategoryModel(catName));
+            Categories.Add(new CategoryModel(catName, this));
 
-            // Clear the input and notify the UI
             CatIndex = -1;
+            Save();
             OnPropertyChanged(nameof(CatIndex));
         }
 
-        private ObservableCollection<CategoryModel> Load()
-        {
-            if (!File.Exists(path)) return new();
 
-            string contents = File.ReadAllText(path);
+        private async Task ShowShoppingListAsync()
+        {
+            await Shell.Current.Navigation.PushAsync(new ShopPageView(this));
+        }
+        private async Task ShowStoreListAsync()
+        {
+            await Shell.Current.Navigation.PushAsync(new StoreListView(this));
+        }
+        public void DeleteCategory(CategoryModel category)
+        {
+            Categories.Remove(category);
+            Save();
+        }
+
+        private ObservableCollection<CategoryModel> Load(string importFile = "")
+        {
+            string contents;
+
+            if (!string.IsNullOrWhiteSpace(importFile))
+            {
+                contents = importFile;
+            }
+            else
+            {
+                if (!File.Exists(path)) return new();
+                contents = File.ReadAllText(path);
+            }
+
             if (string.IsNullOrWhiteSpace(contents)) return new();
 
             XElement root;
-            try
-            {
-                root = XElement.Parse(contents);
-            }
-            catch
-            {
-                return new();
-            }
+            try { root = XElement.Parse(contents); }
+            catch { return new(); }
 
             var catList = new List<CategoryModel>();
 
-            foreach (var cat in root.Element("categories").Elements())
+            foreach (var catXML in root.Elements())
             {
-                catList.Add(new CategoryModel(cat.Name.LocalName));
-            }
+                CategoryModel cat = new CategoryModel(catXML.Name.LocalName ?? string.Empty, this);
 
-            foreach (var itemElem in root.Element("items").Elements())
-            {
-                var name = itemElem.Name.LocalName ?? string.Empty;
-
-                int amount = 0;
-                string unit = string.Empty;
-                bool optional = false;
-                bool bought = false;
-                string catName = string.Empty;
-
-                var amountEl = itemElem.Element("amount");
-                if (amountEl != null) int.TryParse(amountEl.Value, out amount);
-
-                var unitEl = itemElem.Element("unit");
-                if (unitEl != null) unit = unitEl.Value;
-
-                var catEl = itemElem.Element("category");
-                if (catEl != null) catName = catEl.Value;
-
-                var optEl = itemElem.Element("optional");
-                if (optEl != null) optional = bool.Parse(optEl.Value);
-
-                var boughtEl = itemElem.Element("bought");
-                if (boughtEl != null) bought = bool.Parse(boughtEl.Value);
-
-                var model = new ItemModel
+                foreach (var itemXML in catXML.Elements())
                 {
-                    name = name,
-                    unit = unit,
-                    Optional = optional,
-                    bought = bought,
-                    amount = amount
-                };
+                    var name = itemXML.Name.LocalName ?? string.Empty;
 
-                if (catList.Where(cat => cat.Name == catName).Count() == 0)
-                {
-                    catList.Add(new CategoryModel(catName));
-                }
+                    int amount = 0;
+                    string unit = string.Empty;
+                    string store = string.Empty;
+                    bool optional = false;
+                    bool bought = false;
 
-                catList.ForEach((cat) =>
-                {
-                    if (cat.Name == catName)
+                    var amountEl = itemXML.Element("amount");
+                    if (amountEl != null) int.TryParse(amountEl.Value, out amount);
+
+                    var unitEl = itemXML.Element("unit");
+                    if (unitEl != null) unit = unitEl.Value;
+
+                    var storeEl = itemXML.Element("store");
+                    if (storeEl != null) store = storeEl.Value;
+
+                    var optEl = itemXML.Element("optional");
+                    if (optEl != null) optional = bool.Parse(optEl.Value);
+
+                    var boughtEl = itemXML.Element("bought");
+                    if (boughtEl != null) bought = bool.Parse(boughtEl.Value);
+
+                    var model = new ItemModel
                     {
-                        cat.Items.Add(model);
-                    }
-                });
+                        name = name,
+                        unit = unit,
+                        Optional = optional,
+                        bought = bought,
+                        amount = amount,
+                        store = store
+                    };
+
+                    cat.AddItem(model);
+                }
+                catList.Add(cat);
             }
 
             return new ObservableCollection<CategoryModel>(catList);
         }
-
-        public async Task Save()
+        public void Save()
         {
             XElement catsXML = new XElement("categories");
-
-            XElement itemsXML = new XElement("items");
             foreach (var cat in Categories)
             {
-                catsXML.Add(cat.Name);
+                XElement categoryXML = new XElement(cat.Name);
                 foreach (var item in cat.Items)
                 {
-                    itemsXML.Add(new XElement(item.name,
+                    categoryXML.Add(
+                        new XElement(item.name,
                         new XElement("amount", item.amount),
                         new XElement("unit", item.unit),
                         new XElement("optional", item.Optional),
-                        new XElement("bought", item.bought),
-                        new XElement("category", cat.Name)));
+                        new XElement("store", item.store),
+                        new XElement("bought", item.bought)));
+                }
+                catsXML.Add(categoryXML);
+            }
+            File.WriteAllText(path, catsXML.ToString());
+        }
+        public async Task ExportListAsync()
+        {
+            Save();
+            Stream str = File.OpenRead(path);
+            var fileSaverResult = await FileSaver.SaveAsync("Lista.list.xml", str);
+
+            str.Close();
+        }
+        public async Task ImportListAsync()
+        {
+            try
+            {
+                var result = await FilePicker.Default.PickAsync();
+                if (result != null)
+                {
+                    if (result.FileName.EndsWith(".list.xml", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string xmlString = await File.ReadAllTextAsync(result.FullPath);
+
+                        bool replace = await Shell.Current.CurrentPage.DisplayAlert(
+                            "Import",
+                            "Czy chcesz zastąpić obecną listę?\n\nTAK - Zastąp wszystko\nNIE - Dodaj do obecnej listy",
+                            "TAK",
+                            "NIE");
+
+                        if (replace)
+                        {
+                            Categories.Clear();
+                            var imported = Load(xmlString);
+                            foreach (var cat in imported)
+                            {
+                                Categories.Add(cat);
+                            }
+                        }
+                        else
+                        {
+                            var imported = Load(xmlString);
+                            foreach (var cat in imported)
+                            {
+                                Categories.Add(cat);
+                            }
+                        }
+
+                        Save();
+                    }
+                    else
+                    {
+                        await Shell.Current.CurrentPage.DisplayAlert("Błąd", "Wybierz plik .list.xml", "OK");
+                    }
                 }
             }
-            XElement list = new XElement("list", itemsXML, catsXML);
-            File.WriteAllText(path, list.ToString());
+            catch (Exception ex)
+            {
+                await Shell.Current.CurrentPage.DisplayAlert("Błąd", $"Nie udało się zaimportować: {ex.Message}", "OK");
+            }
         }
     }
 }

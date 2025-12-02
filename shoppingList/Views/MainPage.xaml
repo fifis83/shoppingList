@@ -8,26 +8,35 @@
     <ContentPage.BindingContext>
         <Models:MainPageModel/>
     </ContentPage.BindingContext>
-    
-    <VerticalStackLayout>
-        <HorizontalStackLayout>
-            <Picker x:Name="catName" SelectedIndex="{Binding CatIndex}" ItemsSource="{Binding CategoryPickerList}"></Picker>
-            <Button Text="+" Command="{Binding NewCategory}" HorizontalOptions="End"></Button>
-        </HorizontalStackLayout>
-        <CollectionView x:Name="catsCollection"
+    <ScrollView >
+        <VerticalStackLayout>
+            <FlexLayout JustifyContent="SpaceBetween">
+                
+            <HorizontalStackLayout>
+                <Picker x:Name="catName" SelectedIndex="{Binding CatIndex}" ItemsSource="{Binding CategoryPickerList}" WidthRequest="100"></Picker>
+                <Button Text="+" Command="{Binding NewCategory}" HorizontalOptions="End"></Button>
+            </HorizontalStackLayout>
+                <HorizontalStackLayout>
+                    <ImageButton Source="upload.png" Command="{Binding ExportList}" MaximumHeightRequest="50"></ImageButton>
+                    <ImageButton Source="download.png" Command="{Binding ImportList}" MaximumHeightRequest="50"></ImageButton>
+                    <ImageButton Source="shoppingcart.png" Command="{Binding ShowShoppingList}" MaximumHeightRequest="50"></ImageButton>
+                    <ImageButton Source="dotnet_bot.png" Command="{Binding ShowStoreList}" MaximumHeightRequest="50"></ImageButton>
+                </HorizontalStackLayout>
+            </FlexLayout>
+            <CollectionView x:Name="catsCollection"
         ItemsSource="{Binding Categories}"
         Margin="20">
-            <CollectionView.ItemsLayout>
-                <LinearItemsLayout Orientation="Vertical"
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical"
                    ItemSpacing="10" ></LinearItemsLayout>
-            </CollectionView.ItemsLayout>
+                </CollectionView.ItemsLayout>
 
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Views:CategoryView></Views:CategoryView>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-    </VerticalStackLayout>
-
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Views:CategoryView></Views:CategoryView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>

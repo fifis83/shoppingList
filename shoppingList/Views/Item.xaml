@@ -5,15 +5,60 @@
              xmlns:Models="clr-namespace:shoppingList.Models"
              x:DataType="Models:ItemModel">
 
-    <Border>
-        <HorizontalStackLayout>
-            <CheckBox IsChecked="{Binding bought}">
-            </CheckBox>
-            <Label Text="{Binding name}"></Label>
-            <Label Text="{Binding amount}"/>
-            <Label Text="{Binding unit}"/>
-            <Label Text="{Binding optionalText}" TextColor="Grey"></Label>
-            <Button Text="🚫"></Button>
-        </HorizontalStackLayout>
-    </Border>
+    <SwipeView>
+        <SwipeView.RightItems>
+        </SwipeView.RightItems>
+
+        <Border BackgroundColor="{Binding bgColor}" 
+                Stroke="Transparent" 
+                Margin="0,2">
+            <Grid Padding="10,8" ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" Text="🚫" Command="{Binding DeleteItemButton}" Background="Transparent" ></Button>
+                <CheckBox Grid.Column="1" 
+                         IsChecked="{Binding bought}"
+                         VerticalOptions="Center"/>
+
+                <VerticalStackLayout Grid.Column="2" 
+                                    VerticalOptions="Center">
+                    <Label Text="{Binding name}" 
+                           TextColor="{Binding textColor}"
+                           TextDecorations="{Binding textDecor}"
+                           FontSize="16"
+                           FontAttributes="Bold"/>
+                    <Label Text="{Binding optionalText}" 
+                           TextColor="#FFA500"
+                           FontSize="12"
+                           IsVisible="{Binding Optional}"/>
+                </VerticalStackLayout>
+
+                <Label Grid.Column="3" 
+                       Text="{Binding store}"
+                       TextColor="{Binding textColor}"
+                       TextDecorations="{Binding textDecor}"
+                       VerticalOptions="Center"
+                       FontSize="14"
+                       Margin="5,0"/>
+
+                <Label Grid.Column="4" 
+                       VerticalOptions="Center"
+                       TextColor="{Binding textColor}"
+                       TextDecorations="{Binding textDecor}"
+                       FontSize="14">
+                    <Label.Text>
+                        <MultiBinding StringFormat="{}{0} {1}">
+                            <Binding Path="amount"/>
+                            <Binding Path="unit"/>
+                        </MultiBinding>
+                    </Label.Text>
+                </Label>
+            </Grid>
+        </Border>
+    </SwipeView>
 </ContentView>
