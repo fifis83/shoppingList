@@ -89,6 +89,8 @@ public class NewItemPageModel : INotifyPropertyChanged
 
     private async Task AddStoreAsync()
     {
+        //TODO: Add an option to have no store
+
         string result = await _page.DisplayPromptAsync("Nowy sklep", "Nazwa Sklepu:");
         if (string.IsNullOrWhiteSpace(result))
         {
