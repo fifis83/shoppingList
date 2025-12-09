@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 
@@ -12,22 +9,27 @@ namespace shoppingList.Models
     public class CategoryModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged(string name) =>
+    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-        public string Name { get; set; } = string.Empty;
         public ObservableCollection<ItemModel> Items { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string ItemsVisible { get; set; } = "True";        
+        
+        public MainPageModel mainPageModel;
+        
         public ICommand OpenNewItem { get; set; }
-        public string ItemsVisible { get; set; } = "True";
         public ICommand ToggleItemsVisibility { get; set; }
         public ICommand DeleteCategory { get; set; }
-        public MainPageModel mainPageModel;
+
         public CategoryModel(string name, MainPageModel mainPageModel, ObservableCollection<ItemModel> items = null)
         {
             Name = name;
             Items = items == null ? new() : items;
             this.mainPageModel = mainPageModel;
 
-            Items.CollectionChanged += Items_CollectionChanged;
-            foreach (var item in Items) item.PropertyChanged += Item_PropertyChanged;
+            Items.CollectionChanged += ItemsCollectionChanged;
+            foreach (var item in Items) item.PropertyChanged += ItemPropertyChanged;
 
             OpenNewItem = new AsyncRelayCommand(OpenNewItemAsync);
             ToggleItemsVisibility = new AsyncRelayCommand(ToggleItemsVisibilityAsync);
@@ -38,15 +40,15 @@ namespace shoppingList.Models
         {
             var newPage = new Views.NewItemPage(this);
             var newWindow = new Window { Page = newPage };
-
+            
             newWindow.Height = 500;
             newWindow.Width = 400;
-            Application.Current.OpenWindow(newWindow);
+            Application.Current?.OpenWindow(newWindow);
         }
 
         private async Task DeleteCategoryAsync()
         {
-            Items.CollectionChanged -= Items_CollectionChanged;
+            Items.CollectionChanged -= ItemsCollectionChanged;
             Items.Clear();
             mainPageModel.DeleteCategory(this);
         }
@@ -56,12 +58,9 @@ namespace shoppingList.Models
             ItemsVisible = ItemsVisible == "True" ? "False" : "True";
             OnPropertyChanged(nameof(ItemsVisible));
         }
-        public void AddItem(ItemModel item)
-        {
-            InsertSorted(item);
-        }
 
-        private void InsertSorted(ItemModel item)
+
+        public void InsertSorted(ItemModel item)
         {
             if (Items.Count == 0)
             {
@@ -82,14 +81,14 @@ namespace shoppingList.Models
             mainPageModel.Save();
         }
 
-        private void Items_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        private void ItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.NewItems != null)
             {
                 foreach (ItemModel it in e.NewItems)
                 {
-                    it.PropertyChanged -= Item_PropertyChanged;
-                    it.PropertyChanged += Item_PropertyChanged;
+                    it.PropertyChanged -= ItemPropertyChanged;
+                    it.PropertyChanged += ItemPropertyChanged;
                 }
             }
 
@@ -97,19 +96,19 @@ namespace shoppingList.Models
             {
                 foreach (ItemModel it in e.OldItems)
                 {
-                    it.PropertyChanged -= Item_PropertyChanged;
+                    it.PropertyChanged -= ItemPropertyChanged;
                 }
             }
             mainPageModel.Save();
         }
 
-        private void Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        private void ItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             if (sender is ItemModel item)
             {
                 if (!Items.Contains(item)) return;
 
-                Items.CollectionChanged -= Items_CollectionChanged;
+                Items.CollectionChanged -= ItemsCollectionChanged;
                 try
                 {
                     Items.Remove(item);
@@ -117,13 +116,12 @@ namespace shoppingList.Models
                 }
                 finally
                 {
-                    Items.CollectionChanged += Items_CollectionChanged;
+                    Items.CollectionChanged += ItemsCollectionChanged;
                 }
             }
             mainPageModel.Save();
         }
 
-        protected void OnPropertyChanged(string name) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
     }
 }

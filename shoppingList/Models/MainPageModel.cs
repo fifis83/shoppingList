@@ -2,27 +2,29 @@
 using shoppingList.Views;
 using System.Windows.Input;
 using System.Xml.Linq;
-using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Mvvm.Input;
+using System.Diagnostics;
 
 
 namespace shoppingList.Models
 {
     public partial class MainPageModel : ContentPage
     {
-
-        //TODO: zrób aplikacje, tym razem bez czatu
         public ObservableCollection<string> storeList { get; set; } = new ObservableCollection<string>() { "Biedronka", "Lidl", "Dodaj..." };
         public ObservableCollection<CategoryModel> Categories { get; set; } = new ObservableCollection<CategoryModel>();
+     
         string path = Path.Combine(FileSystem.AppDataDirectory, "List.xml");
+        
         public int CatIndex { get; set; } = -1;
         public IList<string> CategoryPickerList => new List<string>() { "AGD", "Jedzenie", "Costam", "Inne" };
+        
         public ICommand NewCategory { get; set; }
         public ICommand ShowShoppingList { get; set; }
         public ICommand ShowStoreList { get; set; }
         public ICommand ExportList { get; set; }
         public ICommand ImportList { get; set; }
+        
         public MainPageModel()
         {
             Categories = Load();
@@ -31,13 +33,16 @@ namespace shoppingList.Models
             ShowStoreList = new AsyncRelayCommand(ShowStoreListAsync);
             ExportList = new AsyncRelayCommand(ExportListAsync);
             ImportList = new AsyncRelayCommand(ImportListAsync);
+            Save();
         }
 
         async Task NewCategoryAsync()
         {
             if (CatIndex == -1) return;
+
             string catName = CategoryPickerList[CatIndex];
             string result;
+            
             if (CatIndex == 3)
             {
                 result = await Shell.Current.CurrentPage.DisplayPromptAsync("Nowa kategoria", "Nazwa kategorii:");
@@ -57,10 +62,12 @@ namespace shoppingList.Models
         {
             await Shell.Current.Navigation.PushAsync(new ShopPageView(this));
         }
+
         private async Task ShowStoreListAsync()
         {
             await Shell.Current.Navigation.PushAsync(new StoreListView(this));
         }
+        
         public void DeleteCategory(CategoryModel category)
         {
             Categories.Remove(category);
@@ -94,47 +101,51 @@ namespace shoppingList.Models
                 CategoryModel cat = new CategoryModel(catXML.Name.LocalName ?? string.Empty, this);
 
                 foreach (var itemXML in catXML.Elements())
-                {
-                    var name = itemXML.Name.LocalName ?? string.Empty;
-
-                    int amount = 0;
-                    string unit = string.Empty;
-                    string store = string.Empty;
-                    bool optional = false;
-                    bool bought = false;
-
-                    var amountEl = itemXML.Element("amount");
-                    if (amountEl != null) int.TryParse(amountEl.Value, out amount);
-
-                    var unitEl = itemXML.Element("unit");
-                    if (unitEl != null) unit = unitEl.Value;
-
-                    var storeEl = itemXML.Element("store");
-                    if (storeEl != null) store = storeEl.Value;
-
-                    var optEl = itemXML.Element("optional");
-                    if (optEl != null) optional = bool.Parse(optEl.Value);
-
-                    var boughtEl = itemXML.Element("bought");
-                    if (boughtEl != null) bought = bool.Parse(boughtEl.Value);
-
-                    var model = new ItemModel
-                    {
-                        name = name,
-                        unit = unit,
-                        Optional = optional,
-                        bought = bought,
-                        amount = amount,
-                        store = store
-                    };
-
-                    cat.AddItem(model);
+                { 
+                    cat.InsertSorted(XMLtoItemModel(itemXML));
                 }
                 catList.Add(cat);
             }
 
             return new ObservableCollection<CategoryModel>(catList);
         }
+
+        private ItemModel XMLtoItemModel(XElement itemXML)
+        {
+            var name = itemXML.Name.LocalName ?? string.Empty;
+
+            float amount = 0;
+            string unit = string.Empty;
+            string store = string.Empty;
+            bool optional = false;
+            bool bought = false;
+
+            var amountEl = itemXML.Element("amount");
+            if (amountEl != null) float.TryParse(amountEl.Value, out amount);
+
+            var unitEl = itemXML.Element("unit");
+            if (unitEl != null) unit = unitEl.Value;
+
+            var storeEl = itemXML.Element("store");
+            if (storeEl != null) store = storeEl.Value=="none"?" ":storeEl.Value;
+
+            var optEl = itemXML.Element("optional");
+            if (optEl != null) optional = bool.Parse(optEl.Value);
+
+            var boughtEl = itemXML.Element("bought");
+            if (boughtEl != null) bought = bool.Parse(boughtEl.Value);
+
+            return new ItemModel
+            {
+                name = name,
+                unit = unit,
+                Optional = optional,
+                bought = bought,
+                amount = amount,
+                store = store
+            };
+        }
+
         public void Save()
         {
             XElement catsXML = new XElement("categories");
@@ -148,13 +159,15 @@ namespace shoppingList.Models
                         new XElement("amount", item.amount),
                         new XElement("unit", item.unit),
                         new XElement("optional", item.Optional),
-                        new XElement("store", item.store),
+                        new XElement("store", item.store==" "?"none":item.store),
                         new XElement("bought", item.bought)));
                 }
                 catsXML.Add(categoryXML);
             }
             File.WriteAllText(path, catsXML.ToString());
+            Debug.WriteLine("Saved");   
         }
+
         public async Task ExportListAsync()
         {
             Save();
@@ -163,6 +176,7 @@ namespace shoppingList.Models
 
             str.Close();
         }
+        
         public async Task ImportListAsync()
         {
             try
@@ -176,9 +190,9 @@ namespace shoppingList.Models
 
                         bool replace = await Shell.Current.CurrentPage.DisplayAlert(
                             "Import",
-                            "Czy chcesz zastąpić obecną listę?\n\nTAK - Zastąp wszystko\nNIE - Dodaj do obecnej listy",
-                            "TAK",
-                            "NIE");
+                            "Nadpisać obecną listę?",
+                            "Nadpisz",
+                            "Dodaj do obecnej");
 
                         if (replace)
                         {

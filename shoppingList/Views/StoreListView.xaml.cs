@@ -7,7 +7,7 @@ namespace shoppingList.Views
         public StoreListView(MainPageModel mainPageModel)
         {
             InitializeComponent();
-            BindingContext = new StoreListModel(mainPageModel);
+            BindingContext = new StoreListPageModel(mainPageModel);
         }
     }
 }

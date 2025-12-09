@@ -4,7 +4,7 @@
              x:Class="shoppingList.ShopPageView"
              xmlns:Views="clr-namespace:shoppingList.Views"
              xmlns:Models="clr-namespace:shoppingList.Models"
-             x:DataType="Models:ShopPageModel">
+             x:DataType="Models:ShoppingListPageModel">
     <ScrollView >
         <VerticalStackLayout>
             <CollectionView x:Name="catsCollection"

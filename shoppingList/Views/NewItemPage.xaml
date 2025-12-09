@@ -20,12 +20,14 @@
                     <Picker.ItemsSource>
                         <x:Array Type="{x:Type x:String}">
                             <x:String>Szt.</x:String>
-                               <x:String>L</x:String>
-                               <x:String>g</x:String>
-                              <x:String>Kg</x:String>
-                               <x:String>m</x:String>
-                              <x:String>cm</x:String>
-                             <x:String>m^2</x:String>
+                            <x:String>Kg</x:String>
+                            <x:String>g</x:String>
+                            <x:String>mg</x:String>
+                            <x:String>L</x:String>
+                            <x:String>ml</x:String>
+                            <x:String>m</x:String>
+                            <x:String>cm</x:String>
+                            <x:String>m^2</x:String>
                             <x:String>inne</x:String>
                         </x:Array>
                     </Picker.ItemsSource>

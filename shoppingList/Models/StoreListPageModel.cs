@@ -1,10 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 
 namespace shoppingList.Models
 {
-    public class StoreListModel : INotifyPropertyChanged
+    public class StoreListPageModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string name) =>
@@ -27,7 +26,7 @@ namespace shoppingList.Models
             }
         }
 
-        public StoreListModel(MainPageModel mainPageModel)
+        public StoreListPageModel(MainPageModel mainPageModel)
         {
             _mainPageModel = mainPageModel;
 
@@ -43,12 +42,13 @@ namespace shoppingList.Models
             {
                 stores.Add(store);
             }
+            stores.Add(" ");
 
             StoreList = stores;
 
             if (StoreList.Count > 0)
             {
-                SelectedStoreIndex = 0;
+                UpdateFilteredItems();
             }
         }
 
@@ -56,21 +56,37 @@ namespace shoppingList.Models
         {
             FilteredItems.Clear();
 
-            if (SelectedStoreIndex < 0 || SelectedStoreIndex >= StoreList.Count)
+            if (SelectedStoreIndex >= StoreList.Count)
                 return;
+            if(SelectedStoreIndex==-1) SelectedStoreIndex=StoreList.Count-1;
 
             string selectedStore = StoreList[SelectedStoreIndex];
 
             var items = _mainPageModel.Categories
                 .SelectMany(cat => cat.Items)
-                .Where(item => item.store == selectedStore && !item.deleted)
+                .Where(item => item.store == selectedStore)
                 .OrderBy(item => item.bought)
                 .ThenBy(item => item.name);
 
             foreach (var item in items)
             {
+                item.PropertyChanged += unboughtItem_PropertyChanged;
                 FilteredItems.Add(item);
             }
+
+        }
+
+        private void unboughtItem_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (sender is ItemModel item && e.PropertyName == nameof(item.deleted))
+            {
+
+                item.PropertyChanged -= unboughtItem_PropertyChanged;
+                if (!FilteredItems.Contains(item)) return;
+                FilteredItems.Remove(item);
+
+            }
+            OnPropertyChanged(nameof(FilteredItems));
         }
     }
 }

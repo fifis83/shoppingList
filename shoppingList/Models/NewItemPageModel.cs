@@ -7,12 +7,9 @@ namespace shoppingList.Models;
 
 public class NewItemPageModel : INotifyPropertyChanged
 {
-    public event PropertyChangedEventHandler PropertyChanged;
-
-    protected virtual void OnPropertyChanged(string propertyName)
-    {
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected virtual void OnPropertyChanged(string propertyName) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
 
     private readonly Page _page;
     public CategoryModel catOrigin;
@@ -35,8 +32,8 @@ public class NewItemPageModel : INotifyPropertyChanged
             {
                 AddStoreVisible = false;
             }
-                OnPropertyChanged(nameof(AddStoreVisible));
-                OnPropertyChanged(nameof(StoreIndex));
+            OnPropertyChanged(nameof(AddStoreVisible));
+            OnPropertyChanged(nameof(StoreIndex));
         }
     }
 
@@ -57,9 +54,13 @@ public class NewItemPageModel : INotifyPropertyChanged
 
     private async Task AddItemAsync()
     {
-        int amount = 0;
+        float amount = 0;
 
-        if (unitInput == null || !int.TryParse(amountInput, out amount) || string.IsNullOrWhiteSpace(nameInput) || _storeIndex == storeList.Count - 1 || _storeIndex == -1)
+        if (unitInput == null ||
+            !float.TryParse(amountInput, out amount) ||
+            string.IsNullOrWhiteSpace(nameInput) ||
+            _storeIndex == storeList.Count - 1 ||
+            amount <= 0)
         {
             await _page.DisplayAlert("Uwaga", "Wpisz wszystkie dane poprawnie", "OK");
             return;
@@ -72,32 +73,29 @@ public class NewItemPageModel : INotifyPropertyChanged
             Optional = optInput,
             bought = false,
             amount = amount,
-            store = storeList[_storeIndex]
+            store = _storeIndex == -1 ? " " : storeList[_storeIndex]
         };
 
-        catOrigin.AddItem(model);
+        catOrigin.InsertSorted(model);
 
-        try
+        if (_page.Window != null)
         {
-            if (_page.Window != null)
-            {
-                Application.Current?.CloseWindow(_page.Window);
-            }
+            Application.Current?.CloseWindow(_page.Window);
         }
-        catch{}
     }
 
     private async Task AddStoreAsync()
     {
-        //TODO: Add an option to have no store
-
         string result = await _page.DisplayPromptAsync("Nowy sklep", "Nazwa Sklepu:");
+
         if (string.IsNullOrWhiteSpace(result))
         {
             await _page.DisplayAlert("Uwaga", "Wpisz nazwe poprawnie", "OK");
             return;
         }
+
         string storeName = storeList.FirstOrDefault(s => s.ToLower().Trim() == result.Trim().ToLower(), "Dodaj...");
+
         if (storeName != "Dodaj...")
         {
             _storeIndex = storeList.IndexOf(storeName);
@@ -107,8 +105,8 @@ public class NewItemPageModel : INotifyPropertyChanged
 
         storeList.Insert(StoreIndex, result);
         AddStoreVisible = false;
-        OnPropertyChanged(nameof(AddStoreVisible));
 
+        OnPropertyChanged(nameof(AddStoreVisible));
         OnPropertyChanged(nameof(_storeIndex));
         OnPropertyChanged(nameof(storeList));
     }
