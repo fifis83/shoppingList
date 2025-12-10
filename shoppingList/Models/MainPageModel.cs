@@ -165,7 +165,6 @@ namespace shoppingList.Models
                 catsXML.Add(categoryXML);
             }
             File.WriteAllText(path, catsXML.ToString());
-            Debug.WriteLine("Saved");   
         }
 
         public async Task ExportListAsync()

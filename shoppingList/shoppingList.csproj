@@ -65,6 +65,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Update="Views\ItemView.xaml.cs">
+	    <DependentUpon>ItemView.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\MainPageView.xaml.cs">
+	    <DependentUpon>MainPageView.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\NewItemPageView.xaml.cs">
+	    <DependentUpon>NewItemPageView.xaml</DependentUpon>
+	  </Compile>
 	  <Compile Update="Views\ShopPageView.xaml.cs">
 	    <DependentUpon>ShopPageView.xaml</DependentUpon>
 	  </Compile>
@@ -77,10 +86,10 @@
 	  <MauiXaml Update="Views\CategoryView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Views\Item.xaml">
+	  <MauiXaml Update="Views\ItemView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Views\NewItemPage.xaml">
+	  <MauiXaml Update="Views\NewItemPageView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\StoreListView.xaml">

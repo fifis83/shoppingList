@@ -17,10 +17,10 @@
                 <Button Text="+" Command="{Binding NewCategory}" HorizontalOptions="End"></Button>
             </HorizontalStackLayout>
                 <HorizontalStackLayout>
-                    <ImageButton Source="upload.png" Command="{Binding ExportList}" MaximumHeightRequest="50"></ImageButton>
-                    <ImageButton Source="download.png" Command="{Binding ImportList}" MaximumHeightRequest="50"></ImageButton>
-                    <ImageButton Source="shoppingcart.png" Command="{Binding ShowShoppingList}" MaximumHeightRequest="50"></ImageButton>
-                    <ImageButton Source="dotnet_bot.png" Command="{Binding ShowStoreList}" MaximumHeightRequest="50"></ImageButton>
+                    <ImageButton BackgroundColor="Beige" Source="upload.png" Command="{Binding ExportList}" MaximumHeightRequest="50"></ImageButton>
+                    <ImageButton BackgroundColor="Beige" Source="download.png" Command="{Binding ImportList}" MaximumHeightRequest="50"></ImageButton>
+                    <ImageButton BackgroundColor="Beige" Source="shoppingcart.png" Command="{Binding ShowShoppingList}" MaximumHeightRequest="50"></ImageButton>
+                    <ImageButton BackgroundColor="Beige" Source="store.png" Command="{Binding ShowStoreList}" MaximumHeightRequest="50"></ImageButton>
                 </HorizontalStackLayout>
             </FlexLayout>
             <CollectionView x:Name="catsCollection"
