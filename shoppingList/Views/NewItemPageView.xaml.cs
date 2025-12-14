@@ -3,15 +3,16 @@ using System;
 using System.Diagnostics;
 using System.Xml.Linq;
 using System.Linq;
+using shoppingList.ViewModels;
 
 namespace shoppingList.Views;
 
 public partial class NewItemPage : ContentPage
 {
-    public NewItemPage(CategoryModel cat)
+    public NewItemPage(CategoryViewModel cat)
     {
         InitializeComponent();
-        BindingContext = new NewItemPageModel(cat,this);
+        BindingContext = new NewItemPageViewModel(cat,this);
 
     }
 

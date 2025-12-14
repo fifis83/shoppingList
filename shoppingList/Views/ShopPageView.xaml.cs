@@ -1,12 +1,13 @@
 using shoppingList.Models;
+using shoppingList.ViewModels;
 
 namespace shoppingList;
 
 public partial class ShopPageView : ContentPage
 {
-	public ShopPageView(MainPageModel mainPage)
+	public ShopPageView(MainPageViewModel mainPage)
 	{
 		InitializeComponent();
-		BindingContext = new ShoppingListPageModel(mainPage);
+		BindingContext = new ShoppingListViewModel(mainPage);
 	}
 }

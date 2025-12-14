@@ -2,9 +2,9 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="shoppingList.Views.CategoryView"
-             xmlns:Models="clr-namespace:shoppingList.Models"
+             xmlns:ViewModels="clr-namespace:shoppingList.ViewModels"
              xmlns:Views="clr-namespace:shoppingList.Views"
-             x:DataType="Models:CategoryModel"
+             x:DataType="ViewModels:CategoryViewModel"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit">
     <VerticalStackLayout MinimumWidthRequest="200" BackgroundColor="#232323" >
         <FlexLayout Direction="Row" JustifyContent="SpaceBetween" Padding="10">

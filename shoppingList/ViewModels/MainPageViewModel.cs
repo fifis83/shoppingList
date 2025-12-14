@@ -1,0 +1,234 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Input;
+using System.Xml.Linq;
+using CommunityToolkit.Maui.Storage;
+using CommunityToolkit.Mvvm.Input;
+using shoppingList.Models;
+using shoppingList.Views;
+
+namespace shoppingList.ViewModels
+{
+    public class MainPageViewModel : ContentPage
+    {
+        string path = Path.Combine(FileSystem.AppDataDirectory, "List.xml");
+
+        public int CatIndex { get; set; } = -1;
+        public IList<string> CategoryPickerList => new List<string>() { "AGD", "Jedzenie", "Costam", "Inne" };
+        MainPageModel mainPage;
+        
+        public ObservableCollection<CategoryViewModel> Categories => mainPage.categories;
+
+        public ICommand NewCategory { get; set; }
+        public ICommand ShowShoppingList { get; set; }
+        public ICommand ShowStoreList { get; set; }
+        public ICommand ExportList { get; set; }
+        public ICommand ImportList { get; set; }
+
+        public MainPageViewModel()
+        {
+            mainPage = new MainPageModel();
+
+            mainPage.categories = Load();
+            NewCategory = new AsyncRelayCommand(NewCategoryAsync);
+            ShowShoppingList = new AsyncRelayCommand(ShowShoppingListAsync);
+            ShowStoreList = new AsyncRelayCommand(ShowStoreListAsync);
+            ExportList = new AsyncRelayCommand(ExportListAsync);
+            ImportList = new AsyncRelayCommand(ImportListAsync);
+            Save();
+        }
+
+        async Task NewCategoryAsync()
+        {
+            if (CatIndex == -1) return;
+
+            string catName = CategoryPickerList[CatIndex];
+            string result;
+
+            if (CatIndex == 3)
+            {
+                result = await Shell.Current.CurrentPage.DisplayPromptAsync("Nowa kategoria", "Nazwa kategorii:");
+                if (!string.IsNullOrWhiteSpace(result)) catName = result;
+                else return;
+            }
+
+            Categories.Add(new CategoryViewModel(catName, this));
+
+            CatIndex = -1;
+            Save();
+            OnPropertyChanged(nameof(CatIndex));
+        }
+
+
+        private async Task ShowShoppingListAsync()
+        {
+            await Shell.Current.Navigation.PushAsync(new ShopPageView(this));
+        }
+
+        private async Task ShowStoreListAsync()
+        {
+            await Shell.Current.Navigation.PushAsync(new StoreListView(this));
+        }
+
+        public void DeleteCategory(CategoryViewModel category)
+        {
+            Categories.Remove(category);
+            Save();
+        }
+
+        private ObservableCollection<CategoryViewModel> Load(string importFile = "")
+        {
+            string contents;
+
+            if (!string.IsNullOrWhiteSpace(importFile))
+            {
+                contents = importFile;
+            }
+            else
+            {
+                if (!File.Exists(path)) return new();
+                contents = File.ReadAllText(path);
+            }
+
+            if (string.IsNullOrWhiteSpace(contents)) return new();
+
+            XElement root;
+            try { root = XElement.Parse(contents); }
+            catch { return new(); }
+
+            var catList = new List<CategoryViewModel>();
+
+            foreach (var catXML in root.Elements())
+            {
+                CategoryViewModel cat = new CategoryViewModel(catXML.Name.LocalName ?? string.Empty, this);
+
+                foreach (var itemXML in catXML.Elements())
+                {
+                    cat.InsertSorted(new ItemViewModel(XMLtoItemModel(itemXML), cat.DeleteItemCommand, cat.BuyItemCommand));
+                }
+                catList.Add(cat);
+            }
+
+            return new ObservableCollection<CategoryViewModel>(catList);
+        }
+
+        private ItemModel XMLtoItemModel(XElement itemXML)
+        {
+            var name = itemXML.Name.LocalName ?? string.Empty;
+
+            float amount = 0;
+            string unit = string.Empty;
+            string store = string.Empty;
+            bool optional = false;
+            bool bought = false;
+
+            var amountEl = itemXML.Element("amount");
+            if (amountEl != null) float.TryParse(amountEl.Value, out amount);
+
+            var unitEl = itemXML.Element("unit");
+            if (unitEl != null) unit = unitEl.Value;
+
+            var storeEl = itemXML.Element("store");
+            if (storeEl != null) store = storeEl.Value == "none" ? " " : storeEl.Value;
+
+            var optEl = itemXML.Element("optional");
+            if (optEl != null) optional = bool.Parse(optEl.Value);
+
+            var boughtEl = itemXML.Element("bought");
+            if (boughtEl != null) bought = bool.Parse(boughtEl.Value);
+
+            return new ItemModel
+            {
+                name = name,
+                unit = unit,
+                optional = optional,
+                bought = bought,
+                amount = amount,
+                store = store
+            };
+        }
+
+        public void Save()
+        {
+            XElement catsXML = new XElement("categories");
+            foreach (var cat in Categories)
+            {
+                XElement categoryXML = new XElement(cat.Name);
+                foreach (var item in cat.Items)
+                {
+                    categoryXML.Add(
+                        new XElement(item.Name,
+                        new XElement("amount", item.Amount),
+                        new XElement("unit", item.Unit),
+                        new XElement("optional", item.Optional),
+                        new XElement("store", item.Store == " " ? "none" : item.Store),
+                        new XElement("bought", item.Bought)));
+                }
+                catsXML.Add(categoryXML);
+            }
+            File.WriteAllText(path, catsXML.ToString());
+        }
+
+        public async Task ExportListAsync()
+        {
+            Save();
+            Stream str = File.OpenRead(path);
+            var fileSaverResult = await FileSaver.SaveAsync("Lista.list.xml", str);
+
+            str.Close();
+        }
+
+        public async Task ImportListAsync()
+        {
+            try
+            {
+                var result = await FilePicker.Default.PickAsync();
+                if (result != null)
+                {
+                    if (result.FileName.EndsWith(".list.xml", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string xmlString = await File.ReadAllTextAsync(result.FullPath);
+
+                        bool replace = await Shell.Current.CurrentPage.DisplayAlert(
+                            "Import",
+                            "Nadpisać obecną listę?",
+                            "Nadpisz",
+                            "Dodaj do obecnej");
+
+                        if (replace)
+                        {
+                            Categories.Clear();
+                            var imported = Load(xmlString);
+                            foreach (var cat in imported)
+                            {
+                                Categories.Add(cat);
+                            }
+                        }
+                        else
+                        {
+                            var imported = Load(xmlString);
+                            foreach (var cat in imported)
+                            {
+                                Categories.Add(cat);
+                            }
+                        }
+
+                        Save();
+                    }
+                    else
+                    {
+                        await Shell.Current.CurrentPage.DisplayAlert("Błąd", "Wybierz plik .list.xml", "OK");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.CurrentPage.DisplayAlert("Błąd", $"Nie udało się zaimportować: {ex.Message}", "OK");
+            }
+        }
+    }
+}

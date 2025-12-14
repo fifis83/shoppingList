@@ -3,10 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="shoppingList.MainPage"
              xmlns:Views="clr-namespace:shoppingList.Views"
-             xmlns:Models="clr-namespace:shoppingList.Models"
-             x:DataType="Models:MainPageModel">
+             xmlns:ViewModels="clr-namespace:shoppingList.ViewModels"
+             x:DataType="ViewModels:MainPageViewModel">
     <ContentPage.BindingContext>
-        <Models:MainPageModel/>
+        <ViewModels:MainPageViewModel/>
     </ContentPage.BindingContext>
     <ScrollView >
         <VerticalStackLayout>

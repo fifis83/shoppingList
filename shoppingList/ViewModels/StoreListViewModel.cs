@@ -1,18 +1,14 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 
-namespace shoppingList.Models
+namespace shoppingList.ViewModels
 {
-    public class StoreListPageModel : INotifyPropertyChanged
+    public class StoreListViewModel : ContentPage
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected void OnPropertyChanged(string name) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
-        private MainPageModel _mainPageModel;
+        private MainPageViewModel _mainPageModel;
 
         public ObservableCollection<string> StoreList { get; set; }
-        public ObservableCollection<ItemModel> FilteredItems { get; set; } = new ObservableCollection<ItemModel>();
+        public ObservableCollection<ItemViewModel> FilteredItems { get; set; } = new ObservableCollection<ItemViewModel>();
 
         private int _selectedStoreIndex = -1;
         public int SelectedStoreIndex
@@ -26,14 +22,14 @@ namespace shoppingList.Models
             }
         }
 
-        public StoreListPageModel(MainPageModel mainPageModel)
+        public StoreListViewModel(MainPageViewModel mainPageModel)
         {
             _mainPageModel = mainPageModel;
 
             var stores = new ObservableCollection<string>();
             var uniqueStores = _mainPageModel.Categories
                 .SelectMany(cat => cat.Items)
-                .Select(item => item.store)
+                .Select(item => item.Store)
                 .Where(store => !string.IsNullOrWhiteSpace(store))
                 .Distinct()
                 .OrderBy(store => store);
@@ -64,9 +60,9 @@ namespace shoppingList.Models
 
             var items = _mainPageModel.Categories
                 .SelectMany(cat => cat.Items)
-                .Where(item => item.store == selectedStore)
-                .OrderBy(item => item.bought)
-                .ThenBy(item => item.name);
+                .Where(item => item.Store == selectedStore)
+                .OrderBy(item => item.Bought)
+                .ThenBy(item => item.Name);
 
             foreach (var item in items)
             {
@@ -78,7 +74,7 @@ namespace shoppingList.Models
 
         private void unboughtItem_PropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (sender is ItemModel item && e.PropertyName == nameof(item.deleted))
+            if (sender is ItemViewModel item && e.PropertyName == nameof(item.Deleted))
             {
 
                 item.PropertyChanged -= unboughtItem_PropertyChanged;

@@ -3,8 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="shoppingList.ShopPageView"
              xmlns:Views="clr-namespace:shoppingList.Views"
-             xmlns:Models="clr-namespace:shoppingList.Models"
-             x:DataType="Models:ShoppingListPageModel">
+             xmlns:ViewModels="clr-namespace:shoppingList.ViewModels"
+             x:DataType="ViewModels:ShoppingListViewModel">
     <ScrollView >
         <VerticalStackLayout>
             <CollectionView x:Name="catsCollection"
